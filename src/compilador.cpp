@@ -11,6 +11,7 @@
 // External variables
 std::string simbolo_flex;
 Simbolo *simbolo_main;
+Tipo *int_type;
 int nl = 1, instruction_count = 0;
 
 // Compiler variables
@@ -58,7 +59,9 @@ void geraCodigo(const std::string &comando, const std::string &rot,
 }
 
 void insereTiposSimples(TabelaTipos *tabela) {
-  tabela->push(new Tipo("integer", t_int));
+  int_type = new Tipo("integer", t_int);
+  
+  tabela->push(int_type);
   tabela->push(new Tipo("boolean", t_bool));
 }
 

@@ -12,6 +12,7 @@
 
 extern std::string simbolo_flex;
 extern Simbolo *simbolo_main;
+extern Tipo *int_type;
 extern int nl, instruction_count;
 extern std::ofstream compiled_stream;
 

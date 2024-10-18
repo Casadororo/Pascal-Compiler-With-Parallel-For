@@ -1,6 +1,8 @@
 #include "../../includes/utils/tabela_simbolos.hpp"
 #include <charconv>
 #include <iostream>
+#include <iterator>
+#include <ostream>
 #include <string>
 
 t_node *criar_nodo(Simbolo *simbolo, t_node *prev) {

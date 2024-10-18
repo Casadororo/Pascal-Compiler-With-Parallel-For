@@ -121,6 +121,24 @@ while {
   return Parser::token::WHILE;
 }
 
+for_parallel {
+  simbolo_flex = yytext;
+  IMPRIME("for_parallel");
+  return Parser::token::FOR_PARALLEL;
+}
+
+to {
+  simbolo_flex = yytext;
+  IMPRIME("to");
+  return Parser::token::TO;
+}
+
+into {
+  simbolo_flex = yytext;
+  IMPRIME("into");
+  return Parser::token::INTO;
+}
+
 do {
   simbolo_flex = yytext;
   IMPRIME("do");

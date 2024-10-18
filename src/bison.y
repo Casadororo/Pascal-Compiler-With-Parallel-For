@@ -1,10 +1,10 @@
-
 %{
 #include <iostream>
 #include <string>
 #include <cmath>
 #include "flex.hpp"
 #include "../includes/compilador.hpp"
+#include "../includes/utils/for_parallel.hpp"
 
 #define flags(STR) std::cerr << "\033[1;31m" << STR << "\033[0m\n"
 #define flag std::cerr << "\033[1;31mFLAG\033[0m\n"
@@ -15,6 +15,9 @@ int num_total_params = 0;
 int num_same_type_vars = 0;
 int num_type_declared = 0;
 int top_desloc = 0;
+
+// Thread Stuff
+int n_threads = 0;
 
 std::list<Param> *params;
 std::stack<std::list<Param>> expression_list_types = {};
@@ -33,7 +36,8 @@ std::stack<int*> num_proc_declared = {};
 %param {yyscan_t scanner}
 
 %code requires {
-  #include "../includes/utils/simbolos.hpp"
+#include "../includes/utils/simbolos.hpp"
+#include "../includes/utils/for_parallel.hpp"
 }
 
 %code provides
@@ -65,6 +69,10 @@ std::stack<int*> num_proc_declared = {};
 %type <tipo_parametro> tipo_parametro
 %type <Tipo*> tipo
 
+// Thread Stuff
+%type <int> numero
+%type <Simbolo*> for_parallel_attr
+
 %token PROGRAM VAR T_BEGIN T_END
 %token LABEL TYPE ARRAY PROCEDURE
 %token FUNCTION GOTO IF ELSE
@@ -77,6 +85,9 @@ std::stack<int*> num_proc_declared = {};
 %token MENOR_QUE MENOR_OU_IGUAL MAIOR_OU_IGUAL MAIOR_QUE
 %token MAIS MENOS MULTI NUMERO
 %token IDENT
+
+// Thread stuff
+%token FOR_PARALLEL TO INTO
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
@@ -148,6 +159,95 @@ bloco:
 
       if (proce->is_func())
          $1->allow_return = false;
+   }
+;
+
+for_parallel_bloco:
+   <ForParallel*>{
+      ForParallel *for_parallel = $<ForParallel*>0;
+
+      // Entrada da thread
+      geraCodigo("NADA", for_parallel->rotulo_entrada_thread.identificador);
+
+      $<ForParallel*>$ = for_parallel;
+   }
+   parte_declara_vars
+   {
+      ForParallel *for_parallel = $1;
+      for_parallel->number_vars += $2;
+
+      geraCodigo("NADA", for_parallel->rotulo_entrada_for.identificador);
+
+      aplicarCarrega(for_parallel->index);
+      aplicarCarrega(for_parallel->index_upper_limit);
+      geraCodigo("CMME");
+
+      geraCodigo("DSVF", "", for_parallel->rotulo_saida_for.identificador);
+   }
+   comando_composto
+   {
+      ForParallel *for_parallel = $1;
+
+      geraCodigo("DSVS", "", for_parallel->rotulo_entrada_for.identificador);
+      geraCodigo("NADA", for_parallel->rotulo_saida_for.identificador);
+   }
+;
+
+for_parallel_attr:
+   ident
+   <Simbolo*>{
+      Simbolo *index_var = new Simbolo($1, lexic_level, 0, variavel_simples);
+      index_var->tipo_v = int_type;
+      insereSimbolo(index_var);
+      
+      // Contando o index
+      top_desloc = 1;
+      num_total_vars = 1; 
+      
+
+      $$ = index_var;
+   }
+   ATRIBUICAO expressao
+   {
+      $$ = $2;
+
+      if(*int_type != *($4.tipo_v))
+         error("Tipos incompatíveis na atribuição");
+      
+      aplicarArmazena($$);
+   }
+;
+
+for_parallel:
+   FOR_PARALLEL 
+   {
+      lexic_level++;
+   }
+   for_parallel_attr TO variavel INTO numero 
+   <ForParallel*>{      
+      if(*int_type != *($5->tipo_v))
+         error("Tipos incompatíveis na atribuição");
+
+      int into_count = $7;
+
+      ForParallel *for_parallel = new ForParallel(lexic_level, 0, n_threads, into_count, $3, $5);
+      for_parallel->number_vars = 1;
+
+      for (int i = 0;i < into_count; i++, n_threads++) {
+         geraCodigo("ITHR", "", std::to_string(n_threads), for_parallel->rotulo_entrada_thread.identificador);
+      }
+      
+      $$ = for_parallel;
+   }
+   for_parallel_bloco
+   {
+      ForParallel* for_parallel = $8;
+
+      removeSimbolos(for_parallel->number_vars);
+      geraCodigo("DMEM", for_parallel->number_vars);
+      lexic_level--;
+
+      visualizaTabelas();
    }
 ;
 
@@ -234,19 +334,7 @@ ident:
 // 10. lista_idents -> lista_idents ',' IDENT | IDENT
 lista_idents:
    lista_idents VIRGULA ident
-   /* {
-      insereSimbolo(new Simbolo($3, lexic_level, top_desloc, variavel_simples));
-      top_desloc++;
-      num_total_vars++;
-      num_same_type_vars++;
-   }*/
    | ident
-   /* {
-      insereSimbolo(new Simbolo($1, lexic_level, top_desloc, variavel_simples));
-      top_desloc++;
-      num_total_vars++;
-      num_same_type_vars++;
-   }*/
 ;
 
 /* Regra 11 - Parte de Declarações de Sub-Rotinas */
@@ -429,6 +517,7 @@ comando_sem_rotulo:
    | comando_composto
    | comando_repetitivo
    | comando_condicional
+   | for_parallel
    | WRITE ABRE_PARENTESES lista_write FECHA_PARENTESES
    | READ ABRE_PARENTESES lista_read FECHA_PARENTESES
 ;
@@ -769,6 +858,13 @@ tipo:
    ident
    {
       $$ = buscaTipo($1);
+   }
+;
+
+numero:
+   NUMERO
+   {
+      $$ = std::stoi(simbolo_flex);
    }
 ;
 

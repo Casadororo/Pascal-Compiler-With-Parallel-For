@@ -69,6 +69,10 @@ public:
 };
 
 class Simbolo {
+protected:
+  Simbolo(int nivel_lexico, int deslocamento)
+      : nivel_lexico{nivel_lexico}, deslocamento{deslocamento} {}
+
 public:
   Simbolo(const std::string &identificador, int nivel_lexico, int deslocamento,
           tipo_parametro_variavel tipo_param_var)

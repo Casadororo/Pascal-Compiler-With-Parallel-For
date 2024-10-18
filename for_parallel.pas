@@ -1,12 +1,10 @@
-program for_parallel (input, output);
+program alo(input, output);
 var i, y: integer;
 begin
-  i := 0;
-  
-  for_parallel i:= 0 to 10 into 4 do
-	var i, count: integer;
+  for_parallel ii:= 0 to i into 4
+	var count: integer;
   begin
     count := count + 1;
-    write()
+    write(count);
   end
 end.
