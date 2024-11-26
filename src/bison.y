@@ -38,6 +38,7 @@ std::stack<int*> num_proc_declared = {};
 %code requires {
 #include "../includes/utils/simbolos.hpp"
 #include "../includes/utils/for_parallel.hpp"
+#include <queue>
 }
 
 %code provides
@@ -69,9 +70,19 @@ std::stack<int*> num_proc_declared = {};
 %type <tipo_parametro> tipo_parametro
 %type <Tipo*> tipo
 
+// Var define Stuff
+%type <std::queue<Simbolo*>*> lista_var
+%type <int> declara_var
+%type <int> declara_vars
+
+// Vector Stuff
+%type <Simbolo*> variavel_with_vector
+%type <int> vector_index_const
+
 // Thread Stuff
 %type <int> numero
 %type <Simbolo*> for_parallel_attr
+%type <Simbolo*> for_parallel_to
 
 %token PROGRAM VAR T_BEGIN T_END
 %token LABEL TYPE ARRAY PROCEDURE
@@ -87,7 +98,7 @@ std::stack<int*> num_proc_declared = {};
 %token IDENT
 
 // Thread stuff
-%token FOR_PARALLEL TO INTO
+%token FOR_PARALLEL TO ITERATE INTO
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
@@ -168,25 +179,40 @@ for_parallel_bloco:
 
       // Entrada da thread
       geraCodigo("NADA", for_parallel->rotulo_entrada_thread.identificador);
+      top_desloc = 0;
 
       $<ForParallel*>$ = for_parallel;
    }
-   parte_declara_vars
+   parte_declara_vars ITERATE 
+   {
+      geraCodigo("AMEM", 2);
+   }
+   for_parallel_attr TO for_parallel_to DO
    {
       ForParallel *for_parallel = $1;
+      
       for_parallel->number_vars += $2;
+      for_parallel->index = $5;
+      for_parallel->index_upper_limit = $7;
+
+      visualizaTabelaSimbolos();
 
       geraCodigo("NADA", for_parallel->rotulo_entrada_for.identificador);
 
       aplicarCarrega(for_parallel->index);
       aplicarCarrega(for_parallel->index_upper_limit);
       geraCodigo("CMME");
-
       geraCodigo("DSVF", "", for_parallel->rotulo_saida_for.identificador);
+
    }
    comando_composto
    {
       ForParallel *for_parallel = $1;
+
+      aplicarCarrega(for_parallel->index);
+      geraCodigo("CRCT", 1);
+      geraCodigo("SOMA");
+      aplicarArmazena(for_parallel->index);
 
       geraCodigo("DSVS", "", for_parallel->rotulo_entrada_for.identificador);
       geraCodigo("NADA", for_parallel->rotulo_saida_for.identificador);
@@ -196,15 +222,11 @@ for_parallel_bloco:
 for_parallel_attr:
    ident
    <Simbolo*>{
-      Simbolo *index_var = new Simbolo($1, lexic_level, 0, variavel_simples);
+      Simbolo *index_var = new Simbolo($1, lexic_level, top_desloc, variavel_simples);
+      top_desloc++;
       index_var->tipo_v = int_type;
       insereSimbolo(index_var);
       
-      // Contando o index
-      top_desloc = 1;
-      num_total_vars = 1; 
-      
-
       $$ = index_var;
    }
    ATRIBUICAO expressao
@@ -218,34 +240,56 @@ for_parallel_attr:
    }
 ;
 
-for_parallel:
-   FOR_PARALLEL 
+for_parallel_to:
+   expressao
    {
-      lexic_level++;
-   }
-   for_parallel_attr TO variavel INTO numero 
-   <ForParallel*>{      
-      if(*int_type != *($5->tipo_v))
+      if(*int_type != *($1.tipo_v))
          error("Tipos incompatíveis na atribuição");
 
-      int into_count = $7;
+      Simbolo *to_var = new Simbolo("_for_parallel_to_var", lexic_level, top_desloc, variavel_simples);
+      top_desloc++;
+      to_var->tipo_v = int_type;
+      insereSimbolo(to_var);
+      
+      aplicarArmazena(to_var);
+      $$ = to_var;
+   }
+;
 
-      ForParallel *for_parallel = new ForParallel(lexic_level, 0, n_threads, into_count, $3, $5);
+for_parallel:
+   FOR_PARALLEL INTO numero DO
+   <ForParallel*>{
+      int into_count = $3;
+      lexic_level++;
+
+      ForParallel *for_parallel = new ForParallel(lexic_level, 0, n_threads, into_count);
       for_parallel->number_vars = 1;
 
       for (int i = 0;i < into_count; i++, n_threads++) {
-         geraCodigo("ITHR", "", std::to_string(n_threads), for_parallel->rotulo_entrada_thread.identificador);
+         geraCodigo("CTHR", n_threads, lexic_level, for_parallel->rotulo_entrada_thread.identificador);
       }
+
+      geraCodigo("DSVS", "", for_parallel->rotulo_saida_thread.identificador);
       
       $$ = for_parallel;
    }
    for_parallel_bloco
    {
-      ForParallel* for_parallel = $8;
+      ForParallel* for_parallel = $5;
 
       removeSimbolos(for_parallel->number_vars);
       geraCodigo("DMEM", for_parallel->number_vars);
+      geraCodigo("STHR");
       lexic_level--;
+
+      int into_count = $3;
+
+      geraCodigo("NADA", for_parallel->rotulo_saida_thread.identificador);
+
+      for (int i = 0;i < into_count; i++) {
+         n_threads--;
+         geraCodigo("ETHR", n_threads);
+      }
 
       visualizaTabelas();
    }
@@ -280,8 +324,8 @@ define_tipo:
 parte_declara_vars: 
    VAR declara_vars 
    {
-      geraCodigo("AMEM", num_total_vars);
-      $$ = num_total_vars;
+      geraCodigo("AMEM", $2);
+      $$ = $2;
       visualizaTabelaSimbolos();
    }
    | %empty
@@ -293,34 +337,53 @@ parte_declara_vars:
 // 9. Declaração de variáveis
 declara_vars:
    declara_vars declara_var
+   {
+      $$ = $1 + $2;
+   }
    | declara_var
+   {
+      $$ = $1;
+   }
 ;
 
 declara_var:
+   lista_var DOIS_PONTOS tipo vector_index_const PONTO_E_VIRGULA
    {
-      num_same_type_vars = 0;
-   }
-   lista_var DOIS_PONTOS tipo PONTO_E_VIRGULA
-   {
-      colocaTipoEmSimbolos($4, num_same_type_vars);
-      num_same_type_vars = 0;
+      int amem = 0, var_size = 1, vector_size = $4;
+      Tipo *tipo_v = $3;
+      std::queue<Simbolo*> *lista_var = $1;
+
+      if(vector_size != 0)
+         var_size *= $4;
+
+      while(!lista_var->empty()) {
+         Simbolo *simbolo = lista_var->front();
+         lista_var->pop();
+
+         simbolo->tipo_v = tipo_v;
+         simbolo->deslocamento = top_desloc;
+         simbolo->vector_size = vector_size;
+
+         insereSimbolo(simbolo);
+
+         amem += var_size;
+         top_desloc += var_size;
+      }
+
+      $$ = amem;
    }
 ;
 
 lista_var:
    lista_var VIRGULA ident
    {
-      insereSimbolo(new Simbolo($3, lexic_level, top_desloc, variavel_simples));
-      top_desloc++;
-      num_total_vars++;
-      num_same_type_vars++;
+      $$ = $1;
+      $$->push(new Simbolo($3, lexic_level, variavel_simples));
    }
    | ident 
    {
-      insereSimbolo(new Simbolo($1, lexic_level, top_desloc, variavel_simples));
-      top_desloc++;
-      num_total_vars++;
-      num_same_type_vars++;
+      $$ = new std::queue<Simbolo*>();
+      $$->push(new Simbolo($1, lexic_level, variavel_simples));
    }
 ;
 
@@ -546,12 +609,9 @@ lista_read:
    }
 ;
 
-
 /* Regra 19 - Atribuicao */
 atribuicao:
-   variavel
-   ATRIBUICAO
-   expressao
+   variavel_with_vector ATRIBUICAO expressao
    {
       if($1->is_func())
          if(!$1->allow_return)
@@ -561,6 +621,29 @@ atribuicao:
          error("Tipos incompatíveis na atribuição");
       
       aplicarArmazena($1);
+   }
+;
+
+variavel_with_vector:
+   variavel ABRE_COLCHETE expressao FECHA_COLCHETE
+   {
+      if(!$1->is_vector())
+         error("Variavel não é um vetor");
+
+      if(*($3.tipo_v) != *int_type)
+         error("Indice não é um inteiro");
+      
+      geraCodigo("CRCT", $1->deslocamento);
+      geraCodigo("SOMA");
+
+      $$ = $1;
+   }
+   | variavel
+   {
+      if($1->is_vector())
+         error("Variável não é um vetor");
+
+      $$ = $1;
    }
 ;
 
@@ -836,6 +919,19 @@ variavel_func:
       
       $$ = Param(simbolo->tipo_v, simbolo->tipo_param);
    }
+   | variavel vector_index
+   {
+      Simbolo* simbolo = $1;
+
+      if(!simbolo->is_vector())
+         error("Variável não é um vetor");
+
+      geraCodigo("CRCT", simbolo->deslocamento);
+      geraCodigo("SOMA");
+      geraCodigo("CONT");
+
+      $$ = Param(simbolo->tipo_v, simbolo->tipo_param);
+   }
    | chamada_procedimento_parametros
    {
       Simbolo* proc = $1;
@@ -865,6 +961,27 @@ numero:
    NUMERO
    {
       $$ = std::stoi(simbolo_flex);
+   }
+;
+
+vector_index:
+   ABRE_COLCHETE expressao FECHA_COLCHETE
+   {
+      if (*($2.tipo_v) != *int_type)
+         error("Index não é um inteiro");
+   }
+;
+
+vector_index_const:
+   ABRE_COLCHETE numero FECHA_COLCHETE
+   {
+      if ($2 < 1)
+         error("Tamanho do vetor inválido");
+      $$ = $2;
+   }
+   | %empty
+   {
+      $$ = 0;
    }
 ;
 

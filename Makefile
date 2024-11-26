@@ -35,6 +35,10 @@ bison: $(SRCDIR)/bison.y
 	mv bison.hpp $(BUILDDIR)/bison.hpp
 
 # Phony target to clean the build directory
+.PHONY: make p
+make p: clean $(TARGET)
+
+# Phony target to clean the build directory
 .PHONY: clean
 clean:
 	-rm -r $(BUILDDIR)

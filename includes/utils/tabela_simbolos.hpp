@@ -29,6 +29,10 @@ public:
   void coloca_tipo_em_simbolos(Tipo *tipo, int quantidade);
   void coloca_tipo_em_simbolos(tipo_parametro_variavel tipo, int quantidade);
   void coloca_tipo_em_simbolos(tipo_parametro tipo, int quantidade);
+
+  // Vector stuff
+  void coloca_tipo_em_simbolos(Tipo *tipo, int vector_size, int quantidade);
+
   void coloca_desloc_em_params(int quantidade);
 
   void print_var_simbolo(Simbolo *simbolo);

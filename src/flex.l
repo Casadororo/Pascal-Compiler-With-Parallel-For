@@ -139,6 +139,12 @@ into {
   return Parser::token::INTO;
 }
 
+iterate {
+  simbolo_flex = yytext;
+  IMPRIME("iterate");
+  return Parser::token::ITERATE;
+}
+
 do {
   simbolo_flex = yytext;
   IMPRIME("do");

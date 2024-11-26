@@ -74,6 +74,11 @@ protected:
       : nivel_lexico{nivel_lexico}, deslocamento{deslocamento} {}
 
 public:
+  Simbolo(const std::string &identificador, int nivel_lexico,
+          tipo_parametro_variavel tipo_param_var)
+      : identificador{identificador}, tipo_simbo{var},
+        tipo_param_var{tipo_param_var}, nivel_lexico{nivel_lexico} {}
+
   Simbolo(const std::string &identificador, int nivel_lexico, int deslocamento,
           tipo_parametro_variavel tipo_param_var)
       : identificador{identificador}, tipo_simbo{var},
@@ -103,6 +108,7 @@ public:
   int is_main();
   int is_func();
   int is_proc_or_func();
+  int is_vector();
 
   std::string identificador;
   Tipo *tipo_v;
@@ -118,6 +124,7 @@ public:
   int number_types = 0;
   int allow_return = 0;
   int number_procs = 0;
+  int vector_size = 0;
 
 protected:
   Rotulo *rotulo_entrada_proce = nullptr;

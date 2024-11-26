@@ -36,6 +36,15 @@ void geraCodigo(const std::string &comando, int arg1, int arg2) {
   compiled_stream.flush();
 }
 
+void geraCodigo(const std::string &comando, int arg1, int arg2,
+                const std::string &rot) {
+  compiled_stream << "     " << comando << " " << arg1 << ", " << arg2 << ", "
+                  << rot << std::endl;
+
+  instruction_count++;
+  compiled_stream.flush();
+}
+
 void geraCodigo(const std::string &comando, const std::string &rot,
                 const std::string &arg1, const std::string &arg2) {
   if (rot != "")
@@ -60,7 +69,7 @@ void geraCodigo(const std::string &comando, const std::string &rot,
 
 void insereTiposSimples(TabelaTipos *tabela) {
   int_type = new Tipo("integer", t_int);
-  
+
   tabela->push(int_type);
   tabela->push(new Tipo("boolean", t_bool));
 }
@@ -185,6 +194,10 @@ void colocaTipoEmSimbolos(tipo_parametro tipo, int quantidade) {
   tabela_simb->coloca_tipo_em_simbolos(tipo, quantidade);
 }
 
+void colocaTipoEmSimbolos(Tipo *tipo, int vector_size, int quantidade) {
+  tabela_simb->coloca_tipo_em_simbolos(tipo, vector_size, quantidade);
+}
+
 void colocaDeslocEmParams(int quantidade) {
   tabela_simb->coloca_desloc_em_params(quantidade);
 }
@@ -276,8 +289,14 @@ void entraProce(Simbolo *simb) {
              std::to_string(simb->nivel_lexico));
 }
 
+void aplicarArmazenaVector(Simbolo *simb) { geraCodigo("ARMM"); }
+
 void aplicarArmazena(Simbolo *simb) {
   std::string comando;
+
+  if (simb->is_vector())
+    return aplicarArmazenaVector(simb);
+
   if (simb->tipo_param == t_copy)
     comando = "ARMZ";
   else if (simb->tipo_param == t_pointer)
