@@ -133,16 +133,16 @@ to {
   return Parser::token::TO;
 }
 
-into {
+create_threads {
   simbolo_flex = yytext;
-  IMPRIME("into");
-  return Parser::token::INTO;
+  IMPRIME("create_threads");
+  return Parser::token::CREATE_THREADS;
 }
 
-iterate {
+step {
   simbolo_flex = yytext;
-  IMPRIME("iterate");
-  return Parser::token::ITERATE;
+  IMPRIME("step");
+  return Parser::token::STEP;
 }
 
 do {

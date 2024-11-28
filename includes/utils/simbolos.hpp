@@ -125,6 +125,7 @@ public:
   int allow_return = 0;
   int number_procs = 0;
   int vector_size = 0;
+  int value = 0;
 
 protected:
   Rotulo *rotulo_entrada_proce = nullptr;

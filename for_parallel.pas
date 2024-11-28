@@ -1,19 +1,19 @@
 program forParallel(input, output);
-var i, y: integer;
-    A,B,C: integer[100];
+var A, B, C: integer[8];
+	i: integer;
 begin
-  i:=0;
+	while i < 8 do
+	begin
+		A[i] := 0;
+		B[i] := i + 1;
+		C[i] := i + 1;
+		i := i + 1;
+	end;
 
-  create_threads th: 4 do
+	create_threads th:= 4 do
 	var desloc: integer;
-  for_thread ii:= 1 to 100 step th
-  begin 
-    A[ii] = B[ii] + C[ii];
-    ---- Compilador
-    ii += 4
-    if ii < _for_parallel_to_var
-    ----
-  end;
-  
-  write(i);
+	for_parallel ii:= threadId to 8 step th
+	begin
+		A[ii] := B[ii] + C[ii];
+	end;
 end.

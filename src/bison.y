@@ -16,13 +16,12 @@ int num_same_type_vars = 0;
 int num_type_declared = 0;
 int top_desloc = 0;
 
-// Thread Stuff
-int n_threads = 0;
-
 std::list<Param> *params;
 std::stack<std::list<Param>> expression_list_types = {};
 std::stack<std::stack<Param>> calling_proc_params = {};
 std::stack<int*> num_proc_declared = {};
+
+bool inside_for_parallel = false;
 %}
 
 %require "3.7.4"
@@ -82,7 +81,9 @@ std::stack<int*> num_proc_declared = {};
 // Thread Stuff
 %type <int> numero
 %type <Simbolo*> for_parallel_attr
+%type <Simbolo*> for_parallel_attr_const
 %type <Simbolo*> for_parallel_to
+%type <Simbolo*> for_parallel_step
 
 %token PROGRAM VAR T_BEGIN T_END
 %token LABEL TYPE ARRAY PROCEDURE
@@ -98,7 +99,7 @@ std::stack<int*> num_proc_declared = {};
 %token IDENT
 
 // Thread stuff
-%token FOR_PARALLEL TO ITERATE INTO
+%token FOR_PARALLEL TO STEP CREATE_THREADS
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc ELSE
@@ -179,21 +180,22 @@ for_parallel_bloco:
 
       // Entrada da thread
       geraCodigo("NADA", for_parallel->rotulo_entrada_thread.identificador);
-      top_desloc = 0;
+      geraCodigo("AMEM", for_parallel->number_vars);
+
+      geraCodigo("CRCT", for_parallel->n_threads->value);
+      aplicarArmazena(for_parallel->n_threads);
 
       $<ForParallel*>$ = for_parallel;
    }
-   parte_declara_vars ITERATE 
-   {
-      geraCodigo("AMEM", 2);
-   }
-   for_parallel_attr TO for_parallel_to DO
+   parte_declara_vars
+   FOR_PARALLEL for_parallel_attr TO for_parallel_to STEP for_parallel_step
    {
       ForParallel *for_parallel = $1;
       
       for_parallel->number_vars += $2;
-      for_parallel->index = $5;
-      for_parallel->index_upper_limit = $7;
+      for_parallel->index = $4;
+      for_parallel->index_upper_limit = $6;
+      for_parallel->step = $8;
 
       visualizaTabelaSimbolos();
 
@@ -210,7 +212,7 @@ for_parallel_bloco:
       ForParallel *for_parallel = $1;
 
       aplicarCarrega(for_parallel->index);
-      geraCodigo("CRCT", 1);
+      aplicarCarrega(for_parallel->step);
       geraCodigo("SOMA");
       aplicarArmazena(for_parallel->index);
 
@@ -240,13 +242,46 @@ for_parallel_attr:
    }
 ;
 
+for_parallel_attr_const:
+   ident
+   <Simbolo*>{
+      Simbolo *index_var = new Simbolo($1, lexic_level, top_desloc, variavel_simples);
+      top_desloc++;
+      index_var->tipo_v = int_type;
+      insereSimbolo(index_var);
+      
+      $$ = index_var;
+   }
+   ATRIBUICAO numero
+   {
+      $$ = $2;
+      $$->value = $4;
+   }
+;
+
 for_parallel_to:
    expressao
    {
       if(*int_type != *($1.tipo_v))
          error("Tipos incompatíveis na atribuição");
 
-      Simbolo *to_var = new Simbolo("_for_parallel_to_var", lexic_level, top_desloc, variavel_simples);
+      Simbolo *to_var = new Simbolo("_to", lexic_level, top_desloc, variavel_simples);
+      top_desloc++;
+      to_var->tipo_v = int_type;
+      insereSimbolo(to_var);
+      
+      aplicarArmazena(to_var);
+      $$ = to_var;
+   }
+;
+
+for_parallel_step:
+   expressao
+   {
+      if(*int_type != *($1.tipo_v))
+         error("Tipos incompatíveis na atribuição");
+
+      Simbolo *to_var = new Simbolo("_step", lexic_level, top_desloc, variavel_simples);
       top_desloc++;
       to_var->tipo_v = int_type;
       insereSimbolo(to_var);
@@ -257,16 +292,35 @@ for_parallel_to:
 ;
 
 for_parallel:
-   FOR_PARALLEL INTO numero DO
-   <ForParallel*>{
-      int into_count = $3;
+   CREATE_THREADS
+   <Simbolo*>{
+      if (inside_for_parallel)
+         error("For parallel dentro de outro for parallel");
+   
+      inside_for_parallel = true;
+   
       lexic_level++;
+      top_desloc = 0;
 
-      ForParallel *for_parallel = new ForParallel(lexic_level, 0, n_threads, into_count);
-      for_parallel->number_vars = 1;
+      Simbolo *thread_id = new Simbolo("threadId", lexic_level, top_desloc, variavel_simples);
+      top_desloc++;
+      thread_id->tipo_v = int_type;
+      insereSimbolo(thread_id);
 
-      for (int i = 0;i < into_count; i++, n_threads++) {
-         geraCodigo("CTHR", n_threads, lexic_level, for_parallel->rotulo_entrada_thread.identificador);
+      $$ = thread_id;
+   }
+   for_parallel_attr_const DO
+   <ForParallel*>{
+      Simbolo *n_threads = $3;
+      Simbolo *thread_id = $2;
+
+      ForParallel *for_parallel = new ForParallel(lexic_level, 0, n_threads);
+      for_parallel->thread_id = thread_id;
+
+      visualizaTabelas();
+
+      for (int id = 0;id < n_threads->value; id++) {
+         geraCodigo("CTHR", id, lexic_level, for_parallel->rotulo_entrada_thread.identificador);
       }
 
       geraCodigo("DSVS", "", for_parallel->rotulo_saida_thread.identificador);
@@ -276,19 +330,17 @@ for_parallel:
    for_parallel_bloco
    {
       ForParallel* for_parallel = $5;
-
+      
       removeSimbolos(for_parallel->number_vars);
       geraCodigo("DMEM", for_parallel->number_vars);
       geraCodigo("STHR");
+      inside_for_parallel = false;
       lexic_level--;
-
-      int into_count = $3;
 
       geraCodigo("NADA", for_parallel->rotulo_saida_thread.identificador);
 
-      for (int i = 0;i < into_count; i++) {
-         n_threads--;
-         geraCodigo("ETHR", n_threads);
+      for (int i = 0;i < for_parallel->n_threads->value; i++) {
+         geraCodigo("ETHR", i);
       }
 
       visualizaTabelas();

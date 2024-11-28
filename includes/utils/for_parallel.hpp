@@ -6,11 +6,10 @@
 
 class ForParallel : public Simbolo {
 public:
-  ForParallel(int nivel_lexico, int deslocamento, int thread_identifier_start,
-              int n_threads)
+  ForParallel(int nivel_lexico, int deslocamento, Simbolo *n_threads)
       : Simbolo(nivel_lexico, deslocamento), rotulo_entrada_for{},
-        rotulo_saida_for{}, rotulo_entrada_thread{},
-        thread_identifier_start{thread_identifier_start}, n_threads{n_threads} {
+        rotulo_saida_for{}, rotulo_entrada_thread{}, n_threads{n_threads} {
+    number_vars = number_of_default_vars;
   }
 
   ~ForParallel() = default;
@@ -20,10 +19,14 @@ public:
   Rotulo rotulo_saida_for;
   Rotulo rotulo_saida_thread;
 
-  int thread_identifier_start;
-  int n_threads;
+  Simbolo *thread_id;
+  Simbolo *n_threads;
   Simbolo *index;
   Simbolo *index_upper_limit;
+  Simbolo *step;
+
+protected:
+  const int number_of_default_vars = 5;
 };
 
 #endif
