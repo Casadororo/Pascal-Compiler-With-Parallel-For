@@ -1,0 +1,152 @@
+     INPP
+     AMEM 30000001
+     CTHR 0, 1, R00
+     CTHR 1, 1, R00
+     CTHR 2, 1, R00
+     CTHR 3, 1, R00
+     CTHR 4, 1, R00
+     CTHR 5, 1, R00
+     CTHR 6, 1, R00
+     CTHR 7, 1, R00
+     CTHR 8, 1, R00
+     CTHR 9, 1, R00
+     CTHR 10, 1, R00
+     CTHR 11, 1, R00
+     CTHR 12, 1, R00
+     CTHR 13, 1, R00
+     CTHR 14, 1, R00
+     CTHR 15, 1, R00
+     DSVS R03
+R00: NADA
+     AMEM 5
+     CRCT 16
+     ARMZ 1, 1
+     AMEM 1
+     CRVL 1, 0
+     ARMZ 1, 3
+     CRCT 10000000
+     ARMZ 1, 4
+     CRVL 1, 1
+     ARMZ 1, 5
+R01: NADA
+     CRVL 1, 3
+     CRVL 1, 4
+     CMME
+     DSVF R02
+     CRVL 1, 3
+     CRCT 20000000
+     SOMA
+     CRCT 0
+     ARMM
+     CRVL 1, 3
+     CRCT 0
+     SOMA
+     CRVL 1, 3
+     CRCT 1
+     SOMA
+     ARMM
+     CRVL 1, 3
+     CRCT 10000000
+     SOMA
+     CRVL 1, 3
+     CRCT 1
+     SOMA
+     ARMM
+     CRVL 1, 3
+     CRVL 1, 5
+     SOMA
+     ARMZ 1, 3
+     DSVS R01
+R02: NADA
+     DMEM 6
+     STHR
+R03: NADA
+     ETHR 0
+     ETHR 1
+     ETHR 2
+     ETHR 3
+     ETHR 4
+     ETHR 5
+     ETHR 6
+     ETHR 7
+     ETHR 8
+     ETHR 9
+     ETHR 10
+     ETHR 11
+     ETHR 12
+     ETHR 13
+     ETHR 14
+     ETHR 15
+     CTHR 0, 1, R04
+     CTHR 1, 1, R04
+     CTHR 2, 1, R04
+     CTHR 3, 1, R04
+     CTHR 4, 1, R04
+     CTHR 5, 1, R04
+     CTHR 6, 1, R04
+     CTHR 7, 1, R04
+     CTHR 8, 1, R04
+     CTHR 9, 1, R04
+     CTHR 10, 1, R04
+     CTHR 11, 1, R04
+     CTHR 12, 1, R04
+     CTHR 13, 1, R04
+     CTHR 14, 1, R04
+     CTHR 15, 1, R04
+     DSVS R07
+R04: NADA
+     AMEM 5
+     CRCT 16
+     ARMZ 1, 1
+     AMEM 1
+     CRVL 1, 0
+     ARMZ 1, 3
+     CRCT 10000000
+     ARMZ 1, 4
+     CRVL 1, 1
+     ARMZ 1, 5
+R05: NADA
+     CRVL 1, 3
+     CRVL 1, 4
+     CMME
+     DSVF R06
+     CRVL 1, 3
+     CRCT 20000000
+     SOMA
+     CRVL 1, 3
+     CRCT 0
+     SOMA
+     CONT
+     CRVL 1, 3
+     CRCT 10000000
+     SOMA
+     CONT
+     SOMA
+     ARMM
+     CRVL 1, 3
+     CRVL 1, 5
+     SOMA
+     ARMZ 1, 3
+     DSVS R05
+R06: NADA
+     DMEM 6
+     STHR
+R07: NADA
+     ETHR 0
+     ETHR 1
+     ETHR 2
+     ETHR 3
+     ETHR 4
+     ETHR 5
+     ETHR 6
+     ETHR 7
+     ETHR 8
+     ETHR 9
+     ETHR 10
+     ETHR 11
+     ETHR 12
+     ETHR 13
+     ETHR 14
+     ETHR 15
+     DMEM 30000001
+     PARA

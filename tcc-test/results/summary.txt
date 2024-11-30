@@ -1,0 +1,5 @@
+MEPA1 Média: 8.80333 segundos
+MEPA2 Média: 5.62 segundos
+MEPA4 Média: 2.812 segundos
+MEPA8 Média: 1.6028 segundos
+MEPA16 Média: 1.8876 segundos

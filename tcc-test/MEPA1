@@ -1,0 +1,62 @@
+     INPP
+     AMEM 30000001
+     CRCT 0
+     ARMZ 0, 30000000
+R00: NADA
+     CRVL 0, 30000000
+     CRCT 10000000
+     CMME
+     DSVF R01
+     CRVL 0, 30000000
+     CRCT 20000000
+     SOMA
+     CRCT 0
+     ARMM
+     CRVL 0, 30000000
+     CRCT 0
+     SOMA
+     CRVL 0, 30000000
+     CRCT 1
+     SOMA
+     ARMM
+     CRVL 0, 30000000
+     CRCT 10000000
+     SOMA
+     CRVL 0, 30000000
+     CRCT 1
+     SOMA
+     ARMM
+     CRVL 0, 30000000
+     CRCT 1
+     SOMA
+     ARMZ 0, 30000000
+     DSVS R00
+R01: NADA
+     CRCT 0
+     ARMZ 0, 30000000
+R02: NADA
+     CRVL 0, 30000000
+     CRCT 10000000
+     CMME
+     DSVF R03
+     CRVL 0, 30000000
+     CRCT 20000000
+     SOMA
+     CRVL 0, 30000000
+     CRCT 0
+     SOMA
+     CONT
+     CRVL 0, 30000000
+     CRCT 10000000
+     SOMA
+     CONT
+     SOMA
+     ARMM
+     CRVL 0, 30000000
+     CRCT 1
+     SOMA
+     ARMZ 0, 30000000
+     DSVS R02
+R03: NADA
+     DMEM 30000001
+     PARA

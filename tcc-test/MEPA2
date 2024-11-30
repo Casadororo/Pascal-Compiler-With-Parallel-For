@@ -1,0 +1,96 @@
+     INPP
+     AMEM 30000001
+     CTHR 0, 1, R00
+     CTHR 1, 1, R00
+     DSVS R03
+R00: NADA
+     AMEM 5
+     CRCT 2
+     ARMZ 1, 1
+     AMEM 1
+     CRVL 1, 0
+     ARMZ 1, 3
+     CRCT 10000000
+     ARMZ 1, 4
+     CRVL 1, 1
+     ARMZ 1, 5
+R01: NADA
+     CRVL 1, 3
+     CRVL 1, 4
+     CMME
+     DSVF R02
+     CRVL 1, 3
+     CRCT 20000000
+     SOMA
+     CRCT 0
+     ARMM
+     CRVL 1, 3
+     CRCT 0
+     SOMA
+     CRVL 1, 3
+     CRCT 1
+     SOMA
+     ARMM
+     CRVL 1, 3
+     CRCT 10000000
+     SOMA
+     CRVL 1, 3
+     CRCT 1
+     SOMA
+     ARMM
+     CRVL 1, 3
+     CRVL 1, 5
+     SOMA
+     ARMZ 1, 3
+     DSVS R01
+R02: NADA
+     DMEM 6
+     STHR
+R03: NADA
+     ETHR 0
+     ETHR 1
+     CTHR 0, 1, R04
+     CTHR 1, 1, R04
+     DSVS R07
+R04: NADA
+     AMEM 5
+     CRCT 2
+     ARMZ 1, 1
+     AMEM 1
+     CRVL 1, 0
+     ARMZ 1, 3
+     CRCT 10000000
+     ARMZ 1, 4
+     CRVL 1, 1
+     ARMZ 1, 5
+R05: NADA
+     CRVL 1, 3
+     CRVL 1, 4
+     CMME
+     DSVF R06
+     CRVL 1, 3
+     CRCT 20000000
+     SOMA
+     CRVL 1, 3
+     CRCT 0
+     SOMA
+     CONT
+     CRVL 1, 3
+     CRCT 10000000
+     SOMA
+     CONT
+     SOMA
+     ARMM
+     CRVL 1, 3
+     CRVL 1, 5
+     SOMA
+     ARMZ 1, 3
+     DSVS R05
+R06: NADA
+     DMEM 6
+     STHR
+R07: NADA
+     ETHR 0
+     ETHR 1
+     DMEM 30000001
+     PARA
